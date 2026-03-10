@@ -1,0 +1,5 @@
+{
+  "whatsappCliPath": "/usr/local/bin/whatsapp-cli",
+  "ollamaModel": "llama3",
+  "pushoverUserKey": "user123"
+}

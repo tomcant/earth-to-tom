@@ -38,6 +38,16 @@ ollama pull gpt-oss:20b # ~13 GB
 ollama serve
 ```
 
+Create the config file at `~/.config/earth-to-tom/config.json`:
+
+```json
+{
+  "whatsappCliPath": "/path/to/whatsapp-cli",
+  "ollamaModel": "gpt-oss:20b",
+  "pushoverUserKey": "your-pushover-user-key"
+}
+```
+
 ## Usage
 
 ```sh
