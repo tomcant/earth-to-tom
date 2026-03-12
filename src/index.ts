@@ -1,6 +1,6 @@
 import { loadConfig } from "./config";
 import { hasState, loadState, saveState } from "./state";
-import { syncChats } from "./whatsapp";
+import { syncChats, listChats, filterEligibleChats } from "./whatsapp";
 
 try {
   const config = await loadConfig();
@@ -14,6 +14,13 @@ try {
   const state = await loadState();
 
   await syncChats(config.whatsappCliPath);
+
+  const chats = await listChats(config.whatsappCliPath);
+  const eligibleChats = filterEligibleChats(chats, state.lastRunAt);
+
+  for (const chat of eligibleChats) {
+    // TODO: R06 — pass chat to message analysis agent
+  }
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   process.exit(1);
