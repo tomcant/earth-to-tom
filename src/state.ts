@@ -10,6 +10,10 @@ function statePath(homeDir: string): string {
   return join(homeDir, ".config", "earth-to-tom", "state.json");
 }
 
+export async function hasState(homeDir: string = homedir()): Promise<boolean> {
+  return Bun.file(statePath(homeDir)).exists();
+}
+
 export async function loadState(homeDir: string = homedir()): Promise<State> {
   const path = statePath(homeDir);
 
