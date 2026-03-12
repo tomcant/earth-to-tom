@@ -1,5 +1,6 @@
 import { loadConfig } from "./config";
 import { hasState, loadState, saveState } from "./state";
+import { syncChats } from "./whatsapp";
 
 try {
   const config = await loadConfig();
@@ -11,6 +12,8 @@ try {
   }
 
   const state = await loadState();
+
+  await syncChats(config.whatsappCliPath);
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   process.exit(1);
