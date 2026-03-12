@@ -48,6 +48,12 @@ Create the config file at `~/.config/earth-to-tom/config.json`:
 }
 ```
 
+Set the Pushover API token in your environment:
+
+```sh
+export PUSHOVER_TOKEN="your-pushover-token"
+```
+
 ## Usage
 
 ```sh

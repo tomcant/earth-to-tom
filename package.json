@@ -9,6 +9,9 @@
     "format": "biome format --write .",
     "format:check": "biome format ."
   },
+  "dependencies": {
+    "ollama": "^0.6.3"
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.4.6",
     "@types/bun": "latest"
