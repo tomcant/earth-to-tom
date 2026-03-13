@@ -20,6 +20,21 @@ Earth-to-Tom is an AI agent that detects urgency signals in WhatsApp messages wi
   - `Bun.file().text()` for reading files
   - `Bun.write()` for writing files
 
+## Architecture
+
+```
+src/index.ts           → Entry point. Loads config, syncs chats, runs the agent, persists state
+src/config.ts          → Loads and validates config from `<HOME>/.config/earth-to-tom/config.json`
+src/state.ts           → Atomic read/write of run state to `<HOME>/.config/earth-to-tom/state.json`
+src/agent.ts           → Agentic loop that analyses a single chat via LLM tool-use
+src/whatsapp.ts        → Wraps `whatsapp-cli` to sync, list chats and messages
+src/ollama.ts          → `ChatModel` adapter for the local Ollama instance
+src/notifications.ts   → Sends push notifications via the Pushover API
+src/logger.ts          → Prefixed logging helper
+```
+
+`PROMPT.md` at the project root defines the system prompt given to the analysis agent.
+
 ## Testing
 
 - **Framework:** Bun's built-in test runner (`bun:test`)
