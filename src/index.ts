@@ -37,6 +37,14 @@ try {
   const eligibleChats = filterEligibleChats(chats, state.lastRunAt);
   log("whatsapp", `${eligibleChats.length} eligible chats for analysis`);
 
+  if (!dryRun) {
+    await saveState({
+      lastRunAt: new Date().toISOString(),
+      totalChats: syncResult.chats,
+      totalMessages: syncResult.messages,
+    });
+  }
+
   if (eligibleChats.length === 0) process.exit(0);
 
   const systemPrompt = await Bun.file("PROMPT.md").text();
@@ -69,14 +77,6 @@ try {
     "summary",
     `${eligibleChats.length} chats analysed, ${totalNotifications} notifications sent`,
   );
-
-  if (!dryRun) {
-    await saveState({
-      lastRunAt: new Date().toISOString(),
-      totalChats: syncResult.chats,
-      totalMessages: syncResult.messages,
-    });
-  }
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   process.exit(1);
