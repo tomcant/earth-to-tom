@@ -1,0 +1,107 @@
+{
+  "items": [
+    {
+      "id": "R01",
+      "name": "User configuration",
+      "description": "Configuration is stored in a JSON file at `<HOMEDIR>/.config/earth-to-tom/config.json` and contains a whatsapp-cli binary path, an Ollama model name and a Pushover user key. All fields are required and must not be empty. If any configuration is missing, empty, or corrupt (e.g. invalid JSON), the application exits with a non-zero code and a message rather than crashing."
+    },
+    {
+      "id": "R02",
+      "name": "Persistent state tracking",
+      "description": "The application persists state between runs in a JSON file at `<HOMEDIR>/.config/earth-to-tom/state.json`. Writes are atomic to prevent corruption from crashes. If the state file is missing, empty, or corrupt (e.g. invalid JSON), the application exits with a non-zero code and a message rather than crashing."
+    },
+    {
+      "id": "R03",
+      "name": "First run detection and deferral",
+      "description": "When there is no prior state the application records the current timestamp and exits. This establishes a baseline from which only new messages will be processed on subsequent runs."
+    },
+    {
+      "id": "R04",
+      "name": "WhatsApp synchronisation",
+      "description": "Chats are synchronised with whatsapp-cli so that the latest messages are available for analysis. Total chats and messages are saved to state so that subsequent runs can accurately determine the number of new chats and messages since the last run. An initial synchronisation is performed on first run."
+    },
+    {
+      "id": "R05",
+      "name": "Message analysis orchestration",
+      "description": "Chats are listed with whatsapp-cli and those with new messages since the last run are identified, filtering out those where the last message is from the user (if the user already replied, there is nothing to analyse). Each eligible chat is passed to an agent for analysis."
+    },
+    {
+      "id": "R06",
+      "name": "Message analysis agent",
+      "description": "A specialised agent lists messages for a given chat, analyses them and sends a high-priority notification via Pushover if urgency signals were detected. Notifications include the sender name, the message content, and the reason it was flagged as urgent. The agent's system prompt must be loaded from the `PROMPT.md` file in the repository root. The first user message sent to the agent must specify which chat to analyse."
+    },
+    {
+      "id": "R07",
+      "name": "Logging",
+      "description": "All activity is logged to stdout: whatsapp-cli invocations, agent tool-calls, Pushover requests. Logs are prefixed to make them easily identifiable, e.g. [whatsapp], [analyser:<name>], [pushover], [earth-to-tom], etc. After synchronisation, the number of new chats and messages since the last run are logged. Before analysis, the number of eligible chats is logged. After message analysis is complete and all notifications have been sent, a summary of the run is logged: total chats analysed, total notifications sent."
+    },
+    {
+      "id": "R08",
+      "name": "Agent loop safety limit",
+      "description": "The agent loop must limit the number of turns to 10 in order to prevent infinite loops. A message is logged if the limit is exceeded."
+    },
+    {
+      "id": "R09",
+      "name": "Graceful error handling",
+      "description": "If the application encounters an error, it exits with a non-zero code and a message rather than crashing."
+    },
+    {
+      "id": "R10",
+      "name": "WhatsApp CLI error handling",
+      "description": "If the application encounters an error with whatsapp-cli, including binary-not-found and subprocess failures, it exits with a non-zero code and a message rather than crashing."
+    },
+    {
+      "id": "R11",
+      "name": "Notification error handling",
+      "description": "If the application encounters an error with the Pushover API, it exits with a non-zero code and a message rather than crashing."
+    },
+    {
+      "id": "R12",
+      "name": "Dry-run mode",
+      "description": "When the `DRY_RUN` environment variable is set, the application runs the full pipeline but skips sending notifications or updating state. This allows testing without side effects. The Pushover API token is not required in dry-run mode."
+    }
+  ],
+  "integrations": {
+    "whatsapp-cli": {
+      "description": "Binary for reading WhatsApp messages. Read-only, cannot send messages",
+      "commands": {
+        "sync": {
+          "usage": "Synchronise chats before analysis",
+          "command": "whatsapp-cli sync",
+          "stdout": "{\"chats\":<TOTAL_CHATS>,\"messages\":<TOTAL_MESSAGES>}"
+        },
+        "list-chats": {
+          "usage": "List chats for analysis",
+          "command": "whatsapp-cli chats --format json",
+          "stdout": "[{\"jid\":\"jid@s.whatsapp.net\",\"name\":\"NAME\",\"last_is_from_me\":false,\"last_message_time\":\"<ISO8601>\"}]"
+        },
+        "list-messages": {
+          "usage": "List messages sent after a given date and time",
+          "command": "whatsapp-cli messages <chat_jid> --after <ISO8601> --format json",
+          "stdout": "[{\"chat_jid\":\"jid@s.whatsapp.net\",\"content\":\"CONTENT\"}]"
+        }
+      }
+    },
+    "ollama": {
+      "description": "Local LLM HTTP server providing chat completions with tool-calling support",
+      "usage": "Assume the Ollama server and configured model are running on the local device. The agent sends messages and tool schemas, and receives either text responses or tool-call arrays",
+      "package": "The `ollama.chat` function from the `ollama` JavaScript package must be used to interact with the model"
+    },
+    "pushover": {
+      "description": "Cloud notification service for delivering urgent message notifications",
+      "endpoint": "https://api.pushover.net/1/messages.json",
+      "method": "POST",
+      "content_type": "application/x-www-form-urlencoded",
+      "parameters": {
+        "token": "Read from an environment variable",
+        "user": "User key from config",
+        "message": "Notification body text",
+        "priority": "Hardcoded to '1' (high priority)"
+      },
+      "responses": {
+        "success": "{\"status\":1,\"request\":\"<id>\"}",
+        "failure": "{\"status\":0,\"errors\":[\"...\"]}"
+      }
+    }
+  }
+}
