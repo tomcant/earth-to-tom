@@ -1,3 +1,5 @@
+import { log } from "./logger";
+
 export interface SyncResult {
   chats: number;
   messages: number;
@@ -11,6 +13,7 @@ export interface Chat {
 }
 
 export async function syncChats(whatsappCliPath: string): Promise<SyncResult> {
+  log("whatsapp", "sync");
   let proc: ReturnType<typeof Bun.spawn>;
 
   try {
@@ -44,6 +47,7 @@ export async function syncChats(whatsappCliPath: string): Promise<SyncResult> {
 }
 
 export async function listChats(whatsappCliPath: string): Promise<Chat[]> {
+  log("whatsapp", "chats --format json");
   let proc: ReturnType<typeof Bun.spawn>;
 
   try {
@@ -84,6 +88,7 @@ export async function listMessages(
   chatJid: string,
   after: string,
 ): Promise<Message[]> {
+  log("whatsapp", `messages ${chatJid} --after ${after} --format json`);
   let proc: ReturnType<typeof Bun.spawn>;
 
   try {

@@ -1,5 +1,5 @@
 import { Ollama } from "ollama";
-import type { ChatModel, AgentMessage } from "./agent";
+import type { AgentMessage, ChatModel } from "./agent";
 
 export function createOllamaChatModel(): ChatModel {
   const client = new Ollama();

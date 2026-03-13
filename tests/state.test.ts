@@ -30,11 +30,18 @@ describe("persistent state tracking", () => {
 
   test("loads valid state", async () => {
     const home = await createTempDir();
-    await writeState(home, JSON.stringify({ lastRunAt: "2026-03-10T12:00:00.000Z" }));
+    await writeState(
+      home,
+      JSON.stringify({ lastRunAt: "2026-03-10T12:00:00.000Z", totalChats: 5, totalMessages: 42 }),
+    );
 
     const state = await loadState(home);
 
-    expect(state).toEqual({ lastRunAt: "2026-03-10T12:00:00.000Z" });
+    expect(state).toEqual({
+      lastRunAt: "2026-03-10T12:00:00.000Z",
+      totalChats: 5,
+      totalMessages: 42,
+    });
   });
 
   test("missing state file exits with message", async () => {
@@ -68,31 +75,57 @@ describe("persistent state tracking", () => {
 
   test("saves state atomically", async () => {
     const home = await createTempDir();
-    const state: State = { lastRunAt: "2026-03-11T08:00:00.000Z" };
+    const state: State = {
+      lastRunAt: "2026-03-11T08:00:00.000Z",
+      totalChats: 5,
+      totalMessages: 42,
+    };
 
     await saveState(state, home);
 
     const saved = await Bun.file(statePath(home)).json();
-    expect(saved).toEqual({ lastRunAt: "2026-03-11T08:00:00.000Z" });
+    expect(saved).toEqual({
+      lastRunAt: "2026-03-11T08:00:00.000Z",
+      totalChats: 5,
+      totalMessages: 42,
+    });
   });
 
   test("saves state to a new file when none exists", async () => {
     const home = await createTempDir();
-    const state: State = { lastRunAt: "2026-03-11T08:00:00.000Z" };
+    const state: State = {
+      lastRunAt: "2026-03-11T08:00:00.000Z",
+      totalChats: 5,
+      totalMessages: 42,
+    };
 
     await saveState(state, home);
 
     const saved = await Bun.file(statePath(home)).json();
-    expect(saved).toEqual({ lastRunAt: "2026-03-11T08:00:00.000Z" });
+    expect(saved).toEqual({
+      lastRunAt: "2026-03-11T08:00:00.000Z",
+      totalChats: 5,
+      totalMessages: 42,
+    });
   });
 
   test("overwrites existing state", async () => {
     const home = await createTempDir();
-    await writeState(home, JSON.stringify({ lastRunAt: "2026-03-10T12:00:00.000Z" }));
+    await writeState(
+      home,
+      JSON.stringify({ lastRunAt: "2026-03-10T12:00:00.000Z", totalChats: 3, totalMessages: 20 }),
+    );
 
-    await saveState({ lastRunAt: "2026-03-11T08:00:00.000Z" }, home);
+    await saveState(
+      { lastRunAt: "2026-03-11T08:00:00.000Z", totalChats: 5, totalMessages: 42 },
+      home,
+    );
 
     const saved = await Bun.file(statePath(home)).json();
-    expect(saved).toEqual({ lastRunAt: "2026-03-11T08:00:00.000Z" });
+    expect(saved).toEqual({
+      lastRunAt: "2026-03-11T08:00:00.000Z",
+      totalChats: 5,
+      totalMessages: 42,
+    });
   });
 });

@@ -1,3 +1,5 @@
+import { log } from "./logger";
+
 const PUSHOVER_ENDPOINT = "https://api.pushover.net/1/messages.json";
 
 export async function sendNotification(
@@ -16,6 +18,8 @@ export async function sendNotification(
     message,
     priority: "1",
   });
+
+  log("pushover", `POST ${PUSHOVER_ENDPOINT}`);
 
   const response = await fetchFn(PUSHOVER_ENDPOINT, {
     method: "POST",

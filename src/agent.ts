@@ -1,3 +1,4 @@
+import { log } from "./logger";
 import type { Message as WhatsAppMessage } from "./whatsapp";
 
 export interface AgentMessage {
@@ -105,24 +106,27 @@ export async function analyseChat(
 
     for (const toolCall of response.tool_calls) {
       const { name, arguments: args } = toolCall.function;
+      const prefix = `analyser:${chatName}`;
 
       if (name === "list_messages") {
+        log(prefix, `tool call: list_messages(${args.chat_jid}, ${args.after})`);
         const result = await deps.listMessages(args.chat_jid as string, args.after as string);
         messages.push({
           role: "tool",
           content: JSON.stringify(result),
         });
       } else if (name === "send_notification") {
+        log(prefix, `tool call: send_notification`);
         await deps.sendNotification(args.message as string);
-        notificationSent = true;
         messages.push({
           role: "tool",
           content: "Notification sent successfully.",
         });
+        notificationSent = true;
       }
     }
   }
 
-  console.log(`Agent loop exceeded ${MAX_TURNS} turns for chat "${chatName}".`);
+  log(`analyser:${chatJid}`, `agent loop exceeded ${MAX_TURNS} turns`);
   return { notificationSent };
 }

@@ -1,36 +1,73 @@
-import { loadConfig } from "./config";
-import { hasState, loadState, saveState } from "./state";
-import { syncChats, listChats, listMessages, filterEligibleChats } from "./whatsapp";
 import { analyseChat } from "./agent";
-import { createOllamaChatModel } from "./ollama";
+import { loadConfig } from "./config";
+import { log } from "./logger";
 import { sendNotification } from "./notifications";
+import { createOllamaChatModel } from "./ollama";
+import { hasState, loadState, saveState } from "./state";
+import { filterEligibleChats, listChats, listMessages, syncChats } from "./whatsapp";
 
 try {
   const config = await loadConfig();
+  const syncResult = await syncChats(config.whatsappCliPath);
 
   if (!(await hasState())) {
-    console.log("First run detected. Recording current timestamp and exiting.");
-    await saveState({ lastRunAt: new Date().toISOString() });
+    log(
+      "earth-to-tom",
+      `first run; ${syncResult.chats} synced chats, ${syncResult.messages} synced messages`,
+    );
+    await saveState({
+      lastRunAt: new Date().toISOString(),
+      totalChats: syncResult.chats,
+      totalMessages: syncResult.messages,
+    });
     process.exit(0);
   }
 
   const state = await loadState();
-
-  await syncChats(config.whatsappCliPath);
+  const newChats = syncResult.chats - state.totalChats;
+  const newMessages = syncResult.messages - state.totalMessages;
+  log("whatsapp", `${newChats} new chats, ${newMessages} new messages`);
 
   const chats = await listChats(config.whatsappCliPath);
   const eligibleChats = filterEligibleChats(chats, state.lastRunAt);
+  log("whatsapp", `${eligibleChats.length} eligible chats for analysis`);
+
+  if (eligibleChats.length === 0) process.exit(0);
 
   const systemPrompt = await Bun.file("PROMPT.md").text();
   const chatModel = createOllamaChatModel();
 
+  let totalNotifications = 0;
+
   for (const chat of eligibleChats) {
-    await analyseChat(systemPrompt, config.ollamaModel, chat.jid, chat.name, state.lastRunAt, {
-      chatModel,
-      listMessages: (chatJid, after) => listMessages(config.whatsappCliPath, chatJid, after),
-      sendNotification: (message) => sendNotification(config.pushoverUserKey, message),
-    });
+    const result = await analyseChat(
+      systemPrompt,
+      config.ollamaModel,
+      chat.jid,
+      chat.name,
+      state.lastRunAt,
+      {
+        chatModel,
+        listMessages: (chatJid, after) => listMessages(config.whatsappCliPath, chatJid, after),
+        sendNotification: (message) => sendNotification(config.pushoverUserKey, message),
+      },
+    );
+
+    if (result.notificationSent) {
+      totalNotifications++;
+    }
   }
+
+  log(
+    "summary",
+    `${eligibleChats.length} chats analysed, ${totalNotifications} notifications sent`,
+  );
+
+  await saveState({
+    lastRunAt: new Date().toISOString(),
+    totalChats: syncResult.chats,
+    totalMessages: syncResult.messages,
+  });
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   process.exit(1);

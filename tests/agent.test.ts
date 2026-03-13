@@ -1,5 +1,5 @@
-import { describe, test, expect } from "bun:test";
-import { analyseChat, type ChatModel, type AgentMessage, type AgentTool } from "../src/agent";
+import { describe, expect, test } from "bun:test";
+import { type AgentMessage, type AgentTool, analyseChat, type ChatModel } from "../src/agent";
 import type { Message as WhatsAppMessage } from "../src/whatsapp";
 
 function createStubChatModel(responses: AgentMessage[]): ChatModel {
@@ -190,7 +190,14 @@ describe("message analysis agent", () => {
         { chatModel, listMessages: async () => [], sendNotification: async () => {} },
       );
 
-      expect(logs.some((l) => l.includes("exceeded") && l.includes("10"))).toBe(true);
+      expect(
+        logs.some(
+          (l) =>
+            l.startsWith("[analyser:x@s.whatsapp.net]") &&
+            l.includes("exceeded") &&
+            l.includes("10"),
+        ),
+      ).toBe(true);
     } finally {
       console.log = origLog;
     }

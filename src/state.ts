@@ -4,6 +4,8 @@ import { dirname, join } from "node:path";
 
 export interface State {
   lastRunAt: string;
+  totalChats: number;
+  totalMessages: number;
 }
 
 function statePath(homeDir: string): string {

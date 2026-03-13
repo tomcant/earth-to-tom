@@ -36,20 +36,28 @@ describe("first run detection and deferral", () => {
 
   test("prior state is detected when state file exists", async () => {
     const home = await createTempDir();
-    await writeState(home, JSON.stringify({ lastRunAt: "2026-03-10T12:00:00.000Z" }));
+    await writeState(
+      home,
+      JSON.stringify({ lastRunAt: "2026-03-10T12:00:00.000Z", totalChats: 5, totalMessages: 42 }),
+    );
 
     const exists = await hasState(home);
 
     expect(exists).toBe(true);
   });
 
-  test("first run records current timestamp", async () => {
+  test("first run records current timestamp and sync totals", async () => {
     setSystemTime(new Date("2026-03-12T10:00:00.000Z"));
     const home = await createTempDir();
 
-    await saveState({ lastRunAt: new Date().toISOString() }, home);
+    await saveState(
+      { lastRunAt: new Date().toISOString(), totalChats: 5, totalMessages: 42 },
+      home,
+    );
 
     const state = await loadState(home);
     expect(state.lastRunAt).toBe("2026-03-12T10:00:00.000Z");
+    expect(state.totalChats).toBe(5);
+    expect(state.totalMessages).toBe(42);
   });
 });
