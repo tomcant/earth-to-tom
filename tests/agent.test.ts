@@ -47,7 +47,7 @@ describe("message analysis agent", () => {
     ]);
 
     const listMessagesStub = async (): Promise<WhatsAppMessage[]> => [
-      { chat_jid: "alice@s.whatsapp.net", content: "I need help ASAP!" },
+      { chat_jid: "alice@s.whatsapp.net", content: "I need help ASAP!", is_from_me: false },
     ];
 
     const notifications: string[] = [];
@@ -89,7 +89,7 @@ describe("message analysis agent", () => {
     ]);
 
     const listMessagesStub = async (): Promise<WhatsAppMessage[]> => [
-      { chat_jid: "bob@s.whatsapp.net", content: "See you tomorrow!" },
+      { chat_jid: "bob@s.whatsapp.net", content: "See you tomorrow!", is_from_me: false },
     ];
 
     const notifications: string[] = [];
