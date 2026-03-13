@@ -20,8 +20,17 @@ describe("listing messages", () => {
     expect(messages[0]).toEqual({
       chat_jid: "alice@s.whatsapp.net",
       content: "Hey, are you there?",
+      is_from_me: false,
     });
     expect(messages[1].content).toBe("I need help ASAP!");
+  });
+
+  test("filters out messages sent by the user", async () => {
+    const cli = join(fixturesDir, "whatsapp-cli-messages-success.sh");
+
+    const messages = await listMessages(cli, "alice@s.whatsapp.net", "2026-03-12T07:00:00.000Z");
+
+    expect(messages.every((m) => !m.is_from_me)).toBe(true);
   });
 
   test("throws on subprocess failure", async () => {

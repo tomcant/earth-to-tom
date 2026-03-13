@@ -78,7 +78,7 @@
         "list-messages": {
           "usage": "List messages sent after a given date and time",
           "command": "whatsapp-cli messages <chat_jid> --after <ISO8601> --format json",
-          "stdout": "[{\"chat_jid\":\"jid@s.whatsapp.net\",\"content\":\"CONTENT\"}]"
+          "stdout": "[{\"chat_jid\":\"jid@s.whatsapp.net\",\"content\":\"CONTENT\",\"is_from_me\":false}]"
         }
       }
     },

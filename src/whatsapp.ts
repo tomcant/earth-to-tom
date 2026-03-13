@@ -81,6 +81,7 @@ export async function listChats(whatsappCliPath: string): Promise<Chat[]> {
 export interface Message {
   chat_jid: string;
   content: string;
+  is_from_me: boolean;
 }
 
 export async function listMessages(
@@ -116,7 +117,8 @@ export async function listMessages(
     throw new Error("whatsapp-cli messages returned invalid JSON.");
   }
 
-  return parsed as Message[];
+  const messages = parsed as Message[];
+  return messages.filter((m) => !m.is_from_me);
 }
 
 export function filterEligibleChats(chats: Chat[], lastRunAt: string): Chat[] {
