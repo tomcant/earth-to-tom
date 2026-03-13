@@ -7,6 +7,9 @@ import { hasState, loadState, saveState } from "./state";
 import { filterEligibleChats, listChats, listMessages, syncChats } from "./whatsapp";
 
 try {
+  const dryRun = !!process.env.DRY_RUN;
+  if (dryRun) log("earth-to-tom", "dry-run mode enabled");
+
   const config = await loadConfig();
   const syncResult = await syncChats(config.whatsappCliPath);
 
@@ -15,11 +18,13 @@ try {
       "earth-to-tom",
       `first run; ${syncResult.chats} synced chats, ${syncResult.messages} synced messages`,
     );
-    await saveState({
-      lastRunAt: new Date().toISOString(),
-      totalChats: syncResult.chats,
-      totalMessages: syncResult.messages,
-    });
+    if (!dryRun) {
+      await saveState({
+        lastRunAt: new Date().toISOString(),
+        totalChats: syncResult.chats,
+        totalMessages: syncResult.messages,
+      });
+    }
     process.exit(0);
   }
 
@@ -49,7 +54,9 @@ try {
       {
         chatModel,
         listMessages: (chatJid, after) => listMessages(config.whatsappCliPath, chatJid, after),
-        sendNotification: (message) => sendNotification(config.pushoverUserKey, message),
+        sendNotification: dryRun
+          ? async (_message) => log("pushover", `dry-run: skipped notification`)
+          : (message) => sendNotification(config.pushoverUserKey, message),
       },
     );
 
@@ -63,11 +70,13 @@ try {
     `${eligibleChats.length} chats analysed, ${totalNotifications} notifications sent`,
   );
 
-  await saveState({
-    lastRunAt: new Date().toISOString(),
-    totalChats: syncResult.chats,
-    totalMessages: syncResult.messages,
-  });
+  if (!dryRun) {
+    await saveState({
+      lastRunAt: new Date().toISOString(),
+      totalChats: syncResult.chats,
+      totalMessages: syncResult.messages,
+    });
+  }
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   process.exit(1);
